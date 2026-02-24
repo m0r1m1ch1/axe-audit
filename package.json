@@ -1,0 +1,52 @@
+{
+  "name": "axe-audit",
+  "version": "1.0.1",
+  "description": "Accessibility audit CLI powered by axe-core and Playwright",
+  "type": "module",
+  "bin": {
+    "axe-audit": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc && node scripts/add-shebang.js",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run build"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/types.d.ts",
+      "import": "./dist/types.js"
+    }
+  },
+  "keywords": [
+    "accessibility",
+    "a11y",
+    "axe-core",
+    "playwright",
+    "wcag",
+    "audit",
+    "cli"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/m0r1m1ch1/axe-audit.git"
+  },
+  "homepage": "https://github.com/m0r1m1ch1/axe-audit",
+  "dependencies": {
+    "@axe-core/playwright": "^4.10.0",
+    "@playwright/test": "^1.49.0",
+    "axe-core": "^4.10.0",
+    "serve": "^14.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  },
+  "files": [
+    "dist",
+    "templates"
+  ],
+  "license": "MIT"
+}
