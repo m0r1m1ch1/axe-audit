@@ -1,3 +1,5 @@
+<img src="./assets/logo.svg" alt="axe-audit" width="200">
+
 # axe-audit
 
 Accessibility audit CLI powered by axe-core and Playwright. Automatically checks WCAG compliance of your static site with no configuration required.

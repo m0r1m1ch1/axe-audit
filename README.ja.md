@@ -1,3 +1,5 @@
+<img src="./assets/logo.svg" alt="axe-audit" width="200">
+
 # axe-audit
 
 axe-core と Playwright によるアクセシビリティ監査 CLI。設定不要で静的サイトの WCAG 準拠を自動チェックします。
