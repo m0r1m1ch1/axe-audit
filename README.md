@@ -11,6 +11,7 @@ Accessibility audit CLI powered by axe-core and Playwright. Automatically checks
 - **18 languages** — axe-core messages in 18 locales (default: Japanese)
 - **Multiple output formats** — HTML (browser) / JSON / CSV
 - **Package manager auto-detection** — Detects npm / yarn / pnpm / bun from lock files
+- **Page exclusion** — Exclude pages by glob patterns (e.g. CMS-generated pages)
 - **CI/CD ready** — Auto-detects CI environments, exit codes for pipeline integration
 
 ## Installation
@@ -75,6 +76,7 @@ export default defineConfig({
   showIncomplete: false,
   showPasses: false,
   showInapplicable: false,
+  excludePages: [],
   axe: {
     tags: undefined,
     locale: "ja",
@@ -100,6 +102,19 @@ export default defineConfig({
 | `showIncomplete` | `boolean` | `false` | Show incomplete (needs review) rules in HTML report |
 | `showPasses` | `boolean` | `false` | Show passing rules in HTML report |
 | `showInapplicable` | `boolean` | `false` | Show inapplicable rules in HTML report |
+| `excludePages` | `string[]` | `[]` | Glob patterns to exclude pages (e.g. `["**/interview/*/*", "404.html"]`) |
+
+### `excludePages` Patterns
+
+Uses glob syntax to match page paths relative to `dist/`.
+
+| Pattern | Matches | Does NOT match |
+| --- | --- | --- |
+| `**/interview/*/*` | `saiyo/interview/01/index.html` | `saiyo/interview/index.html` |
+| `**/draft/**` | `blog/draft/post.html` | `blog/post.html` |
+| `404.html` | `404.html` | `about/404.html` |
+
+Supported wildcards: `**` (any directory depth), `*` (any characters except `/`), `?` (single character).
 
 ### `axe` Sub-Options
 
@@ -119,6 +134,8 @@ export default defineConfig({
 
 A custom HTML report is generated (`axe-audit/report.html`) and opens automatically in your browser via a local HTTP server. On macOS, Google Chrome is used if installed; otherwise the default browser is used. Skipped in CI environments.
 
+The report includes audited pages and excluded pages sections at the bottom, showing which pages were tested and which were excluded by `excludePages` patterns.
+
 ### JSON
 
 Enable with the `--json` flag or `json: true` in config. Outputs `axe-audit/report.json`.
@@ -128,7 +145,9 @@ Enable with the `--json` flag or `json: true` in config. Outputs `axe-audit/repo
   "metadata": {
     "axeVersion": "4.10.0",
     "timestamp": "2025-01-01T00:00:00.000Z",
-    "toolVersion": "0.1.0"
+    "toolVersion": "1.1.0",
+    "auditedPages": ["/", "/about/", "/contact/"],
+    "excludedPages": ["/admin/", "/draft/"]  // only present when excludePages is set
   },
   "pages": [
     {

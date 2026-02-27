@@ -157,7 +157,11 @@ async function main(): Promise<void> {
 
   // Step 5-6: Discover pages
   const distDir = resolve(cwd, config.dist);
-  const pages = discoverPages(distDir, config.port);
+  const allPages = discoverPages(distDir, config.port);
+  const pages = config.excludePages.length > 0
+    ? discoverPages(distDir, config.port, config.excludePages)
+    : allPages;
+  const excludedPages = allPages.filter((p) => !pages.some((pp) => pp.path === p.path));
   console.log(`\nFound ${pages.length} HTML page(s) to audit.`);
 
   // Step 7: Generate test files in temp directory
@@ -202,9 +206,9 @@ async function main(): Promise<void> {
 
   // Step 10: Generate reports
   const htmlPath = resolve(cwd, "axe-audit", "report.html");
-  generateHtmlReport(tmpDir, config, cwd);
+  generateHtmlReport(tmpDir, config, pages, excludedPages, cwd);
   if (config.json) {
-    generateJsonReport(tmpDir, cwd);
+    generateJsonReport(tmpDir, pages, excludedPages, cwd);
   }
   if (config.csv) {
     generateCsvReport(tmpDir, cwd);

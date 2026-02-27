@@ -2,7 +2,7 @@ import { writeFileSync, mkdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { loadCollectedResults, type CollectedResult } from "./json.js";
 import { getToolVersion } from "./config.js";
-import { type ResolvedConfig } from "./types.js";
+import { type ResolvedConfig, type PageInfo } from "./types.js";
 
 function escapeHtml(str: string): string {
   return str
@@ -603,6 +603,23 @@ const CSS = `
 
     /* Focus */
     :focus-visible { outline: 1px solid #4f46e5; outline-offset: -4px; }
+
+    /* Page list grid */
+    .grid-table-pagelist {
+      display: grid;
+      grid-template-columns: 3rem minmax(0, 1fr);
+      font-size: 0.875rem;
+      line-height: 1.25rem;
+      min-width: 20rem;
+    }
+    .list-row {
+      display: contents;
+    }
+    .list-row > div {
+      padding: 0.5rem 1rem;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .list-row:last-child > div { border-bottom: none; }
 `;
 
 function formatTimestamp(iso: string): string {
@@ -624,10 +641,52 @@ function buildHtml(
   showPasses: boolean,
   showInapplicable: boolean,
   meta: { timestamp: string; axeVersion: string; toolVersion: string },
+  pages: PageInfo[],
+  excludedPages: PageInfo[],
 ): string {
   const summaryText = violationCount === 0
     ? "問題は検出されませんでした"
     : `${violationCount} 件の問題が検出されました`;
+
+  const auditedPageRows = pages.map((p, i) => `
+            <div class="list-row">
+              <div class="cell-no">${i + 1}</div>
+              <div class="cell-url"><span>${escapeHtml(p.path)}</span></div>
+            </div>`).join("");
+  const auditedPagesSection = `
+    <section>
+      <h2 class="section-heading">検査対象ページ ${pages.length}件</h2>
+      <div class="card">
+        <div class="card-scroll">
+          <div class="grid-table-pagelist">
+            <div class="grid-table-incomplete-header">
+              <div>No</div>
+              <div>URL</div>
+            </div>${auditedPageRows}
+          </div>
+        </div>
+      </div>
+    </section>`;
+
+  const excludedPageRows = excludedPages.map((p, i) => `
+            <div class="list-row">
+              <div class="cell-no">${i + 1}</div>
+              <div class="cell-url"><span>${escapeHtml(p.path)}</span></div>
+            </div>`).join("");
+  const excludedPagesSection = excludedPages.length > 0 ? `
+    <section>
+      <h2 class="section-heading">除外ページ ${excludedPages.length}件</h2>
+      <div class="card">
+        <div class="card-scroll">
+          <div class="grid-table-pagelist">
+            <div class="grid-table-incomplete-header">
+              <div>No</div>
+              <div>URL</div>
+            </div>${excludedPageRows}
+          </div>
+        </div>
+      </div>
+    </section>` : "";
 
   const violationSection = `
     <section>
@@ -725,13 +784,13 @@ function buildHtml(
       </p>
     </div>
   </header>
-  <main>${violationSection}${incompleteSection}${passSection}${inapplicableSection}
+  <main>${violationSection}${incompleteSection}${passSection}${inapplicableSection}${auditedPagesSection}${excludedPagesSection}
   </main>
 </body>
 </html>`;
 }
 
-export function generateHtmlReport(tmpDir: string, config: Pick<ResolvedConfig, "showIncomplete" | "showPasses" | "showInapplicable">, cwd: string = process.cwd()): void {
+export function generateHtmlReport(tmpDir: string, config: Pick<ResolvedConfig, "showIncomplete" | "showPasses" | "showInapplicable">, pages: PageInfo[], excludedPages: PageInfo[], cwd: string = process.cwd()): void {
   const collected = loadCollectedResults(tmpDir);
   const violations = collectViolations(collected);
   const incomplete = config.showIncomplete ? collectIncomplete(collected) : [];
@@ -761,6 +820,8 @@ export function generateHtmlReport(tmpDir: string, config: Pick<ResolvedConfig, 
       axeVersion,
       toolVersion: getToolVersion(),
     },
+    pages,
+    excludedPages,
   );
 
   const outputDir = resolve(cwd, "axe-audit");

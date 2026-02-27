@@ -11,6 +11,7 @@ axe-core と Playwright によるアクセシビリティ監査 CLI。設定不�
 - **多言語対応** — axe-core メッセージを 18 言語で表示（デフォルト: 日本語）
 - **複数出力形式** — HTML（ブラウザ）/ JSON / CSV
 - **パッケージマネージャー自動検出** — npm / yarn / pnpm / bun のロックファイルから判定
+- **ページ除外** — glob パターンで不要なページを除外可能（例: CMS 生成ページ）
 - **CI/CD 対応** — CI 環境を自動検出、exit code で結果を判定可能
 
 ## インストール
@@ -79,6 +80,7 @@ export default defineConfig({
   showIncomplete: false,
   showPasses: false,
   showInapplicable: false,
+  excludePages: [],
   axe: {
     tags: undefined,
     locale: "ja",
@@ -105,7 +107,20 @@ export default defineConfig({
 | `showIncomplete`   | `boolean` | `false`     | HTML レポートに要確認ルール (incomplete) を表示               |
 | `showPasses`       | `boolean` | `false`     | HTML レポートに合格ルール (passes) を表示                    |
 | `showInapplicable` | `boolean` | `false`     | HTML レポートに非対象ルール (inapplicable) を表示             |
+| `excludePages`     | `string[]` | `[]`       | 除外するページの glob パターン（例: `["**/interview/*/*", "404.html"]`） |
 
+
+### `excludePages` パターン
+
+`dist/` からの相対パスに対して glob パターンでマッチします。
+
+| パターン | マッチする | マッチしない |
+| --- | --- | --- |
+| `**/interview/*/*` | `saiyo/interview/01/index.html` | `saiyo/interview/index.html` |
+| `**/draft/**` | `blog/draft/post.html` | `blog/post.html` |
+| `404.html` | `404.html` | `about/404.html` |
+
+対応ワイルドカード: `**`（任意のディレクトリ階層）、`*`（`/` 以外の任意の文字列）、`?`（任意の1文字）
 
 ### `axe` サブオプション
 
@@ -127,6 +142,8 @@ export default defineConfig({
 
 カスタム HTML レポート（`axe-audit/report.html`）が生成され、ローカル HTTP サーバー経由でブラウザに自動表示されます。macOS では Google Chrome がインストールされていれば Chrome で開き、なければデフォルトブラウザで開きます。CI 環境では表示をスキップします。
 
+レポート末尾には「検査対象ページ」と「除外ページ」セクションが表示され、どのページが検査され、どのページが `excludePages` で除外されたかを確認できます。
+
 ### JSON
 
 `--json` フラグまたは設定ファイルの `json: true` で有効化。`axe-audit/report.json` を出力します。
@@ -136,7 +153,9 @@ export default defineConfig({
   "metadata": {
     "axeVersion": "4.10.0",
     "timestamp": "2025-01-01T00:00:00.000Z",
-    "toolVersion": "0.1.0"
+    "toolVersion": "1.1.0",
+    "auditedPages": ["/", "/about/", "/contact/"],
+    "excludedPages": ["/admin/", "/draft/"]  // excludePages 設定時のみ
   },
   "pages": [
     {

@@ -120,6 +120,13 @@ export function validateConfig(userConfig: AxeAuditConfig): ResolvedConfig {
     config.showInapplicable = userConfig.showInapplicable;
   }
 
+  if (userConfig.excludePages !== undefined) {
+    if (!Array.isArray(userConfig.excludePages) || !(userConfig.excludePages as unknown[]).every((t) => typeof t === "string")) {
+      throw new AuditError("config 'excludePages' must be an array of strings.");
+    }
+    config.excludePages = userConfig.excludePages;
+  }
+
   // axe config
   if (userConfig.axe !== undefined) {
     const ua = userConfig.axe;
@@ -195,7 +202,7 @@ export function validateConfig(userConfig: AxeAuditConfig): ResolvedConfig {
   config.axe = axe;
 
   // Warn about unknown top-level keys
-  const knownTopKeys = new Set(["dist", "buildCommand", "noBuild", "port", "json", "csv", "showIncomplete", "showPasses", "showInapplicable", "axe"]);
+  const knownTopKeys = new Set(["dist", "buildCommand", "noBuild", "port", "json", "csv", "showIncomplete", "showPasses", "showInapplicable", "excludePages", "axe"]);
   for (const key of Object.keys(userConfig)) {
     if (!knownTopKeys.has(key)) {
       console.warn(`Warning: Unknown config key "${key}" (typo?)`);

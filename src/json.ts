@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { resolve, join } from "node:path";
 import { getToolVersion } from "./config.js";
-import type { AuditReport, AuditPageResult, AuditSummary } from "./types.js";
+import type { AuditReport, AuditPageResult, AuditSummary, PageInfo } from "./types.js";
 
 interface CollectedResult {
   url: string;
@@ -28,6 +28,8 @@ function loadCollectedResults(tmpDir: string): CollectedResult[] {
 
 export function generateJsonReport(
   tmpDir: string,
+  auditedPages: PageInfo[],
+  excludedPages: PageInfo[],
   cwd: string = process.cwd()
 ): void {
   const collected = loadCollectedResults(tmpDir);
@@ -66,6 +68,8 @@ export function generateJsonReport(
       axeVersion: axeVersion || "unknown",
       timestamp: new Date().toISOString(),
       toolVersion: getToolVersion(),
+      auditedPages: auditedPages.map((p) => p.path),
+      excludedPages: excludedPages.length > 0 ? excludedPages.map((p) => p.path) : undefined,
     },
     pages,
     summary,

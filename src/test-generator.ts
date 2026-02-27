@@ -9,7 +9,39 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const _require = createRequire(import.meta.url);
 
-export function discoverPages(distDir: string, port: number): PageInfo[] {
+function globToRegex(pattern: string): RegExp {
+  let regexStr = "";
+  let i = 0;
+  while (i < pattern.length) {
+    const char = pattern[i];
+    if (char === "*") {
+      if (pattern[i + 1] === "*") {
+        if (pattern[i + 2] === "/") {
+          regexStr += "(?:.+/)?";
+          i += 3;
+        } else {
+          regexStr += ".*";
+          i += 2;
+        }
+      } else {
+        regexStr += "[^/]*";
+        i++;
+      }
+    } else if (char === "?") {
+      regexStr += "[^/]";
+      i++;
+    } else if (".+^${}()|[]\\".includes(char)) {
+      regexStr += "\\" + char;
+      i++;
+    } else {
+      regexStr += char;
+      i++;
+    }
+  }
+  return new RegExp(`^${regexStr}$`);
+}
+
+export function discoverPages(distDir: string, port: number, excludePages: string[] = []): PageInfo[] {
   if (!existsSync(distDir)) {
     throw new AuditError(
       `Build output directory "${distDir}" does not exist.\n` +
@@ -18,9 +50,17 @@ export function discoverPages(distDir: string, port: number): PageInfo[] {
   }
 
   const files = readdirSync(distDir, { recursive: true, encoding: "utf-8" }) as string[];
-  const htmlFiles = files
+  let htmlFiles = files
     .filter((f) => f.endsWith(".html"))
     .sort();
+
+  if (excludePages.length > 0) {
+    const patterns = excludePages.map(globToRegex);
+    htmlFiles = htmlFiles.filter((f) => {
+      const normalized = f.replace(/\\/g, "/");
+      return !patterns.some((re) => re.test(normalized));
+    });
+  }
 
   if (htmlFiles.length === 0) {
     throw new AuditError(`No HTML files found in "${distDir}".`);

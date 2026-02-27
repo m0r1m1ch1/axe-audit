@@ -15,9 +15,13 @@ export default defineConfig({
   csv: false, // true で CSV ファイルを出力
 
   // HTML レポートの表示セクション制御
-  showIncomplete: false,   // true で要確認 (incomplete) を表示
-  showPasses: false,       // true で合格ルール一覧 (passes) を表示
+  showIncomplete: false, // true で要確認 (incomplete) を表示
+  showPasses: false, // true で合格ルール一覧 (passes) を表示
   showInapplicable: false, // true で非対象ルール一覧 (inapplicable) を表示
+
+  // ページ除外設定（glob パターン対応）
+  // CMS 生成ページなど検証不要なページを除外できます
+  excludePages: [], // 例: ["404.html", "cms/**", "**/admin.html"]
 
   // axe-core 設定
   axe: {

@@ -53,6 +53,7 @@ export interface AxeAuditConfig {
   showIncomplete?: boolean;
   showPasses?: boolean;
   showInapplicable?: boolean;
+  excludePages?: string[];
   axe?: AxeConfig;
 }
 
@@ -67,6 +68,7 @@ export interface ResolvedConfig {
   showIncomplete: boolean;
   showPasses: boolean;
   showInapplicable: boolean;
+  excludePages: string[];
   axe: {
     tags: string[] | undefined;
     locale: string | undefined;
@@ -104,6 +106,8 @@ export interface AuditReport {
     axeVersion: string;
     timestamp: string;
     toolVersion: string;
+    auditedPages?: string[];
+    excludedPages?: string[];
   };
   pages: AuditPageResult[];
   summary: AuditSummary;
@@ -142,6 +146,7 @@ export const DEFAULT_CONFIG: ResolvedConfig = {
   showIncomplete: false,
   showPasses: false,
   showInapplicable: false,
+  excludePages: [],
   axe: {
     tags: undefined,
     locale: "ja",
